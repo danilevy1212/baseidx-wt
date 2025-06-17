@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres:16-alpine
+    ports:
+      - 5432:5432
+    restart: always
+    environment:
+      - POSTGRES_DB=baseidx
+      - POSTGRES_USER=unit410
+      - POSTGRES_PASSWORD=supersecurepassword
+  # api:
+    # TODO
+  # idxer
+    # TODO 
