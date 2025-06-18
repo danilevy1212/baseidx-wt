@@ -25,6 +25,7 @@ type BlockDTO = Result[BlockData]
 
 type BlockData struct {
 	Number       string        `json:"number"`
+	Timestamp    string        `json:"timestamp"` // UTC unix timestamp in Hex, use time.Unix(hex.NewHexFromString().Int64(), 0)
 	Transactions []Transaction `json:"transactions"`
 }
 
