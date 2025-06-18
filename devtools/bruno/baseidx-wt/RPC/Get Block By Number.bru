@@ -1,0 +1,31 @@
+meta {
+  name: Get Block By Number
+  type: http
+  seq: 1
+}
+
+post {
+  url: https://base-rpc.publicnode.com
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "method": "eth_getBlockByNumber",
+    "params": [
+      "0x1d7d65b",
+      true
+    ],
+    "id": 1,
+    "jsonrpc": "2.0"
+  }
+}
+
+docs {
+  See https://www.quicknode.com/docs/base/eth_getBlockByNumber
+}

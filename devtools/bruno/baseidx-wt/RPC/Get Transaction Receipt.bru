@@ -1,0 +1,26 @@
+meta {
+  name: Get Transaction Receipt
+  type: http
+  seq: 3
+}
+
+post {
+  url: https://base-rpc.publicnode.com
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "method": "eth_getTransactionReceipt",
+    "params": [
+      "0x8802f3c1a46911c128a7e77f5b3b5f4231da6aec1b276b4eaf59130c036b25c6"
+    ],
+    "id": 1,
+    "jsonrpc": "2.0"
+  }
+}

@@ -1,0 +1,19 @@
+meta {
+  name: Get Latest Block
+  type: http
+  seq: 6
+}
+
+post {
+  url: https://base-rpc.publicnode.com
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {"method":"eth_blockNumber","params":[],"id":1,"jsonrpc":"2.0"}
+}

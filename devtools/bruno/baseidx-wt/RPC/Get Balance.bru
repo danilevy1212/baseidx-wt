@@ -1,0 +1,27 @@
+meta {
+  name: Get Balance
+  type: http
+  seq: 5
+}
+
+post {
+  url: https://docs-demo.base-mainnet.quiknode.pro/
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "method": "eth_getBalance",
+    "params": [
+      "0xC2f8F39f137359AeE27829589c31c8cCCD1bd6BB",
+      "latest"
+    ],
+    "id": 1,
+    "jsonrpc": "2.0"
+  }
+}

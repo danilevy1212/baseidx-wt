@@ -1,0 +1,26 @@
+meta {
+  name: Get Block Receipts
+  type: http
+  seq: 2
+}
+
+post {
+  url: https://base-rpc.publicnode.com
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "method": "eth_getBlockReceipts",
+    "params": [
+      "0x1d7d65b"
+    ],
+    "id": 1,
+    "jsonrpc": "2.0"
+  }
+}

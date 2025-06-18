@@ -1,0 +1,26 @@
+meta {
+  name: Get Transaction By Hash
+  type: http
+  seq: 4
+}
+
+post {
+  url: https://base-rpc.publicnode.com
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "method": "eth_getTransactionByHash",
+    "params": [
+      "0xd4ff6ce14deccd2cd3ae3184e64ccc644da7ba643863058b7512ff1c76887548"
+    ],
+    "id": 1,
+    "jsonrpc": "2.0"
+  }
+}

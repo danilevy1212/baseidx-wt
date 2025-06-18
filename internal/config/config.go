@@ -12,6 +12,7 @@ type Config struct {
 	Addresses  []string `env:"ADDRESSES,required"`
 	StartBlock uint64   `env:"START_BLOCK,required"`
 	Database   DBConfig
+	BaseAPI    BaseAPIConfig
 }
 
 type DBConfig struct {
@@ -24,6 +25,10 @@ type DBConfig struct {
 
 func (dbc DBConfig) String() string {
 	return fmt.Sprintf("postgresql://%s:%s@%s/%s?connect_timeout=5", dbc.Username, dbc.Password, dbc.Host, dbc.Name)
+}
+
+type BaseAPIConfig struct {
+	BaseURL string `env:"BASE_API_BASE_URL,default=https://base-rpc.publicnode.com"`
 }
 
 func New(ctx context.Context) (*Config, error) {
