@@ -57,23 +57,6 @@ func (db *DBClient) CreateSchema(ctx context.Context) error {
 	return err
 }
 
-func (db *DBClient) UpsertTransaction(ctx context.Context, tx Transaction) error {
-	_, err := db.Conn.Exec(ctx, `
-	INSERT INTO transactions (hash, type, value, from_address, to_address, block_index, succesful, timestamp)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-	ON CONFLICT (hash) DO UPDATE SET
-		type = EXCLUDED.type,
-		value = EXCLUDED.value,
-		from_address = EXCLUDED.from_address,
-		to_address = EXCLUDED.to_address,
-		block_index = EXCLUDED.block_index,
-		succesful = EXCLUDED.succesful,
-		timestamp = EXCLUDED.timestamp;
-	`, tx.Hash, tx.Type, tx.Value, tx.From, tx.To, tx.BlockIndex, tx.Succesful, tx.Timestamp)
-
-	return err
-}
-
 func (db *DBClient) UpsertTransactions(ctx context.Context, txs []Transaction) error {
 	if len(txs) == 0 {
 		return nil

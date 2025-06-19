@@ -1,0 +1,419 @@
+{
+  "info": {
+    "name": "baseidx-wt",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "RPC",
+      "item": [
+        {
+          "name": "Get Block By Number",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false,
+                "type": "default"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "See https://www.quicknode.com/docs/base/eth_getBlockByNumber",
+            "url": {
+              "raw": "https://base-rpc.publicnode.com",
+              "protocol": "https",
+              "host": [
+                "base-rpc",
+                "publicnode",
+                "com"
+              ],
+              "path": [],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"eth_getBlockByNumber\",\n  \"params\": [\n    \"0x1d7d65b\",\n    true\n  ],\n  \"id\": 1,\n  \"jsonrpc\": \"2.0\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Get Block Receipts",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false,
+                "type": "default"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "",
+            "url": {
+              "raw": "https://base-rpc.publicnode.com",
+              "protocol": "https",
+              "host": [
+                "base-rpc",
+                "publicnode",
+                "com"
+              ],
+              "path": [],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"eth_getBlockReceipts\",\n  \"params\": [\n    \"0x1d7d65b\"\n  ],\n  \"id\": 1,\n  \"jsonrpc\": \"2.0\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Get Transaction By Hash",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false,
+                "type": "default"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "",
+            "url": {
+              "raw": "https://base-rpc.publicnode.com",
+              "protocol": "https",
+              "host": [
+                "base-rpc",
+                "publicnode",
+                "com"
+              ],
+              "path": [],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"eth_getTransactionByHash\",\n  \"params\": [\n    \"0x12caf47ee1b95d5108baeb1af009057a5fc62a230e6e63343dfd3b6984450744\"\n  ],\n  \"id\": 1,\n  \"jsonrpc\": \"2.0\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Get Balance",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false,
+                "type": "default"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "",
+            "url": {
+              "raw": "https://base-rpc.publicnode.com",
+              "protocol": "https",
+              "host": [
+                "base-rpc",
+                "publicnode",
+                "com"
+              ],
+              "path": [],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"eth_getBalance\",\n  \"params\": [\n    \"0x0933d2a6b30e936057e0d6218d10ca033165cbcd\",\n    \"latest\"\n  ],\n  \"id\": 1,\n  \"jsonrpc\": \"2.0\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Get Latest Block",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false,
+                "type": "default"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "",
+            "url": {
+              "raw": "https://base-rpc.publicnode.com",
+              "protocol": "https",
+              "host": [
+                "base-rpc",
+                "publicnode",
+                "com"
+              ],
+              "path": [],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"eth_blockNumber\",\n  \"params\": [],\n  \"id\": 1,\n  \"jsonrpc\": \"2.0\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Get Transaction Receipt",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false,
+                "type": "default"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "",
+            "url": {
+              "raw": "https://base-rpc.publicnode.com",
+              "protocol": "https",
+              "host": [
+                "base-rpc",
+                "publicnode",
+                "com"
+              ],
+              "path": [],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"eth_getTransactionReceipt\",\n  \"params\": [\n    \"0x12caf47ee1b95d5108baeb1af009057a5fc62a230e6e63343dfd3b6984450744\"\n  ],\n  \"id\": 1,\n  \"jsonrpc\": \"2.0\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Trace Call Transaction",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false,
+                "type": "default"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "",
+            "url": {
+              "raw": "https://docs-demo.base-mainnet.quiknode.pro/",
+              "protocol": "https",
+              "host": [
+                "docs-demo",
+                "base-mainnet",
+                "quiknode",
+                "pro/"
+              ],
+              "path": [],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"debug_traceTransaction\",\n  \"params\": [\n    \"0x12caf47ee1b95d5108baeb1af009057a5fc62a230e6e63343dfd3b6984450744\",\n    {\n      \"tracer\": \"callTracer\",\n       \"tracerConfig\": { \"onlyTopLevel\": true } \n    }\n  ],\n  \"id\": 1,\n  \"jsonrpc\": \"2.0\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "API",
+      "item": [
+        {
+          "name": "Health",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "",
+            "url": {
+              "raw": "http://localhost:3000/health",
+              "protocol": "http",
+              "host": [
+                "localhost:3000"
+              ],
+              "path": [
+                "health"
+              ],
+              "query": [],
+              "variable": []
+            }
+          }
+        },
+        {
+          "name": "Get Balance",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "",
+            "url": {
+              "raw": "http://localhost:3000/accounts/:account/balance",
+              "protocol": "http",
+              "host": [
+                "localhost:3000"
+              ],
+              "path": [
+                "accounts",
+                ":account",
+                "balance"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "account",
+                  "value": "0x0933d2a6b30e936057e0d6218d10ca033165cbcd"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get transactions from account",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "",
+            "url": {
+              "raw": "http://localhost:3000/accounts/:account/transactions",
+              "protocol": "http",
+              "host": [
+                "localhost:3000"
+              ],
+              "path": [
+                "accounts",
+                ":account",
+                "transactions"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "account",
+                  "value": "0xC2f8F39f137359AeE27829589c31c8cCCD1bd6BB"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Transactions In Range",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "",
+            "url": {
+              "raw": "http://localhost:3000/transactions?start=2025-04-23T00:00:00Z&end=2025-12-24T00:00:00Z",
+              "protocol": "http",
+              "host": [
+                "localhost:3000"
+              ],
+              "path": [
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "start",
+                  "value": "2025-04-23T00:00:00Z"
+                },
+                {
+                  "key": "end",
+                  "value": "2025-12-24T00:00:00Z"
+                }
+              ],
+              "variable": []
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": []
+}
