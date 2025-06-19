@@ -16,9 +16,3 @@ type Transaction struct {
 	Succesful  bool            `db:"succesful" json:"susccesful"`
 	Timestamp  time.Time       `db:"timestamp" json:"timestamp"` // For range queries
 }
-
-type Fee struct {
-	TransactionHash string          `db:"transaction_hash" json:"transactionHash"`
-	Amount          decimal.Decimal `db:"amount" json:"amount"`
-	FromAddress     string          `db:"from_address" json:"fromAddress"` // The address that paid the fee
-}

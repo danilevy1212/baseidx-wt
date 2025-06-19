@@ -67,29 +67,39 @@ func main() {
 			break
 		}
 
-		if err := processBlock(*data.NewHexFromUint64(blockIdx), accounts); err != nil {
+		transactions, err := processBlock(*data.NewHexFromUint64(blockIdx), accounts)
+		if err != nil {
 			log.Printf("Error processing block %d: %v", blockIdx, err)
+			continue
+		}
+
+		// Bulk update transactions
+		log.Printf("Processed block %d with %d transactions", blockIdx, len(transactions))
+
+		if err := dbClient.UpsertTransactions(ctx, transactions); err != nil {
+			log.Printf("Error upserting transactions for block %d: %v", blockIdx, err)
 			continue
 		}
 	}
 }
 
 // TODO  Bring this to it's own service later, so I can re-use it in the API
-func processBlock(blockIdx data.Hex, accounts map[string]bool) error {
+func processBlock(blockIdx data.Hex, accounts map[string]bool) ([]database.Transaction, error) {
 	blockDTO, err := rpcClient.GetBlockByNumber(blockIdx, true)
 	if err != nil {
 		log.Printf("Error getting block %s: %v", blockIdx.String(), err)
-		return err
+		return nil, err
 	}
 	blockTimestampHex, err := data.NewHexFromString(blockDTO.Result.Timestamp)
 	if err != nil {
 		log.Printf("Error parsing block timestamp %s: %v", blockDTO.Result.Timestamp, err)
-		return err
+		return nil, err
 	}
 
 	blockTimestamp := time.Unix(blockTimestampHex.Int64(), 0)
 
 	var receiptsDTO *rpc.BlockReceiptsDTO
+	transactions := []database.Transaction{}
 
 	log.Printf("Processing block %s at index %d, at timestamp %s", blockDTO.Result.Number, blockIdx.Uint64(), blockDTO.Result.Timestamp)
 
@@ -138,6 +148,7 @@ func processBlock(blockIdx data.Hex, accounts map[string]bool) error {
 		trx.Type = "transfer"
 		if txDto.Input != "0x" {
 			trx.Type = "call"
+			// TODO  Special handling here, if we have the time later
 		}
 
 		if receiptDTO.Status == "0x1" {
@@ -154,15 +165,17 @@ func processBlock(blockIdx data.Hex, accounts map[string]bool) error {
 
 		log.Printf("Transaction details: %+v", trx)
 
-		if err := dbClient.UpsertTransaction(context.Background(), trx); err != nil {
-			log.Printf("Error inserting transaction %s: %v", trx.Hash, err)
-			continue
-		}
+		transactions = append(transactions, trx)
 
 		// Fee
-		var fee database.Fee
-		fee.TransactionHash = trx.Hash
-		fee.FromAddress = trx.From
+		var fee database.Transaction
+		fee.Hash = trx.Hash + "_fee"
+		fee.Type = "fee"
+		fee.From = trx.From
+		fee.To = trx.From // This is not really used, but it is a valid address
+		fee.BlockIndex = trx.BlockIndex
+		fee.Timestamp = trx.Timestamp
+		fee.Succesful = true // Fees are always successful
 
 		l1Fee := decimal.Zero
 		if receiptDTO.L1Fee != nil {
@@ -187,15 +200,14 @@ func processBlock(blockIdx data.Hex, accounts map[string]bool) error {
 		}
 		gasUsed := decimal.NewFromBigInt(gasUsedHex.Int, 0)
 
-		fee.Amount = effectiveGasPrice.Mul(gasUsed).Add(l1Fee)
+		fee.Value = effectiveGasPrice.Mul(gasUsed).Add(l1Fee)
 
-		if err := dbClient.UpsertFee(context.Background(), fee); err != nil {
-			log.Printf("Error inserting fee for transaction %s: %v", trx.Hash, err)
-			continue
-		}
+		log.Printf("Fee details: %+v", fee)
+
+		transactions = append(transactions, fee)
 	}
 
-	return nil
+	return transactions, nil
 }
 
 // TODO  Same, aka, move to utils or something

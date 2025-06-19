@@ -53,7 +53,7 @@ func main() {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"account": balance.Address,
+			"account": account,
 			"balance": balance.Balance,
 		})
 	})
@@ -65,7 +65,7 @@ func main() {
 			return
 		}
 
-		result, err := db.GetTransactionsAndFees(ctx, account)
+		result, err := db.GetTransactionsFromAddress(ctx, account)
 		if err != nil {
 			log.Printf("Error getting transactions and fees for account %s: %v", account, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
