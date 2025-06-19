@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/danilevy1212/baseidx-wt/internal/config"
@@ -59,7 +60,7 @@ func main() {
 	})
 
 	r.GET("/accounts/:account/transactions", func(c *gin.Context) {
-		account := c.Param("account")
+		account := strings.ToLower(c.Param("account"))
 		if account == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "account parameter is required"})
 			return
@@ -95,9 +96,22 @@ func main() {
 			return
 		}
 
+		if start.After(end) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "start time must be before end time"})
+			return
+		}
+
+		transactions, err := db.GetTransactionsInRange(ctx, start, end)
+		if err != nil {
+			log.Printf("Error getting transactions in range %s to %s: %v", startStr, endStr, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+			return
+		}
+
 		c.JSON(http.StatusOK, gin.H{
-			"start": start.Format(time.RFC3339),
-			"end":   end.Format(time.RFC3339),
+			"start":        start.Format(time.RFC3339),
+			"end":          end.Format(time.RFC3339),
+			"transactions": transactions,
 		})
 	})
 

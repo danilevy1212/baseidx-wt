@@ -15,5 +15,16 @@ headers {
 }
 
 body:json {
-  {"method":"debug_traceTransaction","params":["0x2d3750f7944818e1a4e6b897b6f6ea4d975fcf46720990eb4eda0c00d926a8fd",{"tracer":"callTracer"}],"id":1,"jsonrpc":"2.0"}
+  {
+    "method": "debug_traceTransaction",
+    "params": [
+      "0x12caf47ee1b95d5108baeb1af009057a5fc62a230e6e63343dfd3b6984450744",
+      {
+        "tracer": "callTracer",
+         "tracerConfig": { "onlyTopLevel": true } 
+      }
+    ],
+    "id": 1,
+    "jsonrpc": "2.0"
+  }
 }

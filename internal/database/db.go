@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/shopspring/decimal"
@@ -142,9 +143,9 @@ func (db *DBClient) GetBalance(ctx context.Context, address string) (GetBalanceR
 
 func (db *DBClient) GetTransactionsFromAddress(ctx context.Context, address string) ([]Transaction, error) {
 	rows, err := db.Conn.Query(ctx, `
-		SELECT hash, type, value, from_address, to_address, block_index, succesful, timestamp
+		SELECT hash, type, value, from_address, to_address, block_index, succesful, timestamp AT TIME ZONE 'UTC'
 		FROM transactions
-		WHERE from_address = $1
+		WHERE from_address = $1 OR to_address = $1
 		ORDER BY timestamp DESC;
 	`, address)
 	if err != nil {
@@ -152,8 +153,39 @@ func (db *DBClient) GetTransactionsFromAddress(ctx context.Context, address stri
 	}
 	defer rows.Close()
 
-	var txs []Transaction
+	txs := []Transaction{}
 
+	for rows.Next() {
+		var tx Transaction
+		if err := rows.Scan(
+			&tx.Hash, &tx.Type, &tx.Value, &tx.From, &tx.To,
+			&tx.BlockIndex, &tx.Succesful, &tx.Timestamp,
+		); err != nil {
+			return nil, err
+		}
+		txs = append(txs, tx)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return txs, nil
+}
+
+func (db *DBClient) GetTransactionsInRange(ctx context.Context, start, end time.Time) ([]Transaction, error) {
+	rows, err := db.Conn.Query(ctx, `
+		SELECT hash, type, value, from_address, to_address, block_index, succesful, timestamp AT TIME ZONE 'UTC'
+		FROM transactions
+		WHERE timestamp >= $1 AND timestamp <= $2
+		ORDER BY timestamp DESC;
+	`, start, end)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	txs := []Transaction{}
 	for rows.Next() {
 		var tx Transaction
 		if err := rows.Scan(
