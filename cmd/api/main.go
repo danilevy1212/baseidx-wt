@@ -46,14 +46,32 @@ func main() {
 			return
 		}
 
+		if balance.Transactions <= 0 {
+			c.JSON(http.StatusNotFound, gin.H{"error": "account not found or no transactions"})
+			return
+		}
+
 		c.JSON(http.StatusOK, gin.H{
-			"account": account,
-			"balance": balance,
+			"account": balance.Address,
+			"balance": balance.Balance,
 		})
 	})
 
 	r.GET("/accounts/:account/transactions", func(c *gin.Context) {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "service unavailable"})
+		account := c.Param("account")
+		if account == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "account parameter is required"})
+			return
+		}
+
+		result, err := db.GetTransactionsAndFees(ctx, account)
+		if err != nil {
+			log.Printf("Error getting transactions and fees for account %s: %v", account, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+			return
+		}
+
+		c.JSON(http.StatusOK, result)
 	})
 
 	r.GET("/transactions", func(c *gin.Context) {

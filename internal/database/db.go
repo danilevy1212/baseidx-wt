@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/shopspring/decimal"
@@ -92,33 +93,153 @@ func (db *DBClient) UpsertFee(ctx context.Context, fee Fee) error {
 	return err
 }
 
-func (db *DBClient) GetBalance(ctx context.Context, address string) (decimal.Decimal, error) {
+type GetBalanceResult struct {
+	Address      string          `json:"address"`
+	Balance      decimal.Decimal `json:"balance"`
+	Transactions uint64          `json:"transactions"` // Number of transactions involving this address
+}
+
+func (db *DBClient) GetBalance(ctx context.Context, address string) (GetBalanceResult, error) {
 	var balance decimal.Decimal
+	var count uint64
 
 	log.Printf("Getting balance for address %s", address)
 
 	err := db.Conn.QueryRow(ctx, `
+		WITH relevant AS (
+			SELECT *
+			FROM transactions
+			WHERE from_address = $1 OR to_address = $1
+		)
 		SELECT
-  	  	  -- Include value only from successful transactions
-  	  	  COALESCE(SUM(CASE
-    		WHEN succesful = TRUE AND from_address = $1 THEN -value
-    		WHEN succesful = TRUE AND to_address   = $1 THEN  value
-    		ELSE 0
-  	  	  END), 0) 
-  	  	  -- Always subtract fees if the address paid them, even if tx failed
-  	  	  - COALESCE((
-    		SELECT SUM(amount)
-    		FROM fees
-    		WHERE from_address = $1
-  	  	  ), 0) AS balance
-		FROM transactions
-		WHERE from_address = $1 OR to_address = $1;
-	`, address).Scan(&balance)
+			COALESCE(SUM(CASE
+				WHEN succesful = TRUE AND from_address = $1 THEN -value
+				WHEN succesful = TRUE AND to_address   = $1 THEN  value
+				ELSE 0
+			END), 0)
+			-
+			COALESCE((
+				SELECT SUM(amount)
+				FROM fees
+				WHERE from_address = $1
+			), 0) AS balance,
+			COUNT(*) AS tx_count
+		FROM relevant;
+	`, address).Scan(&balance, &count)
 
 	if err != nil {
 		log.Printf("Error getting balance for address %s: %v", address, err)
-		return decimal.Zero, err
+		return GetBalanceResult{}, err
 	}
 
-	return balance, nil
+	return GetBalanceResult{
+		Address:      address,
+		Balance:      balance,
+		Transactions: count,
+	}, nil
+}
+
+type GetTransactionsAndFeesResult struct {
+	Transactions []Transaction `json:"transactions"`
+	Fees         []Fee         `json:"fees"`
+}
+
+func (db *DBClient) GetTransactionsAndFees(ctx context.Context, address string) (GetTransactionsAndFeesResult, error) {
+	// NOTE  In the name of doing this in one query, error prone, nil dereference could happen
+	const query = `
+		SELECT 
+			'tx' as type,
+			hash,
+			block_index,
+			from_address,
+			to_address,
+			value,
+			type as tx_type,
+			succesful,
+			timestamp AT TIME ZONE 'UTC' as timestamp,
+			NULL as fee_amount
+		FROM transactions
+		WHERE from_address = $1 OR to_address = $1
+		UNION ALL
+		SELECT 
+			'fee' as type,
+			transaction_hash as hash,
+			NULL,
+			from_address,
+			NULL,
+			NULL,
+			NULL,
+			NULL,
+			NULL,
+			amount as fee_amount
+		FROM fees
+		WHERE from_address = $1
+		ORDER BY timestamp NULLS LAST
+	`
+
+	rows, err := db.Conn.Query(ctx, query, address)
+	if err != nil {
+		return GetTransactionsAndFeesResult{}, err
+	}
+	defer rows.Close()
+
+	var result GetTransactionsAndFeesResult
+
+	for rows.Next() {
+		var (
+			typ          string
+			hash         string
+			blockIndex   *string
+			from         string
+			to           *string
+			valueStr     *string
+			txType       *string
+			succesful    *bool
+			timestamp    *time.Time
+			feeAmountStr *string
+		)
+
+		if err := rows.Scan(&typ, &hash, &blockIndex, &from, &to, &valueStr, &txType, &succesful, &timestamp, &feeAmountStr); err != nil {
+			return GetTransactionsAndFeesResult{}, err
+		}
+
+		switch typ {
+		case "tx":
+			val, err := decimal.NewFromString(*valueStr)
+			if err != nil {
+				log.Printf("Error parsing value %s for transaction %s: %v", *valueStr, hash, err)
+				return GetTransactionsAndFeesResult{}, err
+			}
+
+			result.Transactions = append(result.Transactions, Transaction{
+				Hash:       hash,
+				Type:       *txType,
+				Value:      val,
+				From:       from,
+				To:         *to,
+				BlockIndex: *blockIndex,
+				Succesful:  *succesful,
+				Timestamp:  *timestamp,
+			})
+
+		case "fee":
+			feeAmount, err := decimal.NewFromString(*feeAmountStr)
+			if err != nil {
+				log.Printf("Error parsing fee amount %s for transaction %s: %v", *feeAmountStr, hash, err)
+				return GetTransactionsAndFeesResult{}, err
+			}
+
+			result.Fees = append(result.Fees, Fee{
+				TransactionHash: hash,
+				FromAddress:     from,
+				Amount:          feeAmount,
+			})
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return GetTransactionsAndFeesResult{}, err
+	}
+
+	return result, nil
 }
