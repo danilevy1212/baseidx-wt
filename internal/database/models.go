@@ -14,8 +14,7 @@ type Transaction struct {
 	To         string          `db:"to_address" json:"to"`
 	BlockIndex string          `db:"block_index" json:"blockIndex"`
 	Succesful  bool            `db:"succesful" json:"susccesful"`
-	Timestamp  time.Time       `db:"timestamp" json:"timestamp"`            // For range queries
-	Account    string          `db:"account_address" json:"accountAddress"` // The address of the relevant account (either from or to)
+	Timestamp  time.Time       `db:"timestamp" json:"timestamp"` // For range queries
 }
 
 type Fee struct {

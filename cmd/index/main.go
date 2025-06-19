@@ -109,18 +109,19 @@ func processBlock(blockIdx data.Hex, accounts map[string]bool) error {
 				log.Printf("Error getting receipts for block %s: %v", blockIdx.String(), err)
 				continue
 			}
+		}
 
-			for _, r := range receiptsDTO.Result {
-				if r.TransactionHash == txDto.Hash {
-					receiptDTO = &r
-					break
-				}
+		// Get the receipt for the matching TX
+		for _, r := range receiptsDTO.Result {
+			if r.TransactionHash == txDto.Hash {
+				receiptDTO = &r
+				break
 			}
+		}
 
-			if receiptDTO == nil {
-				log.Printf("No receipt found for transaction %s in block %s", txDto.Hash, blockIdx.String())
-				continue
-			}
+		if receiptDTO == nil {
+			log.Printf("No receipt found for transaction %s in block %s", txDto.Hash, blockIdx.String())
+			continue
 		}
 
 		log.Printf("Processing transaction %s from %s to %s with value %s at block index %s", txDto.Hash, txDto.From, txDto.To, txDto.Value, blockIdx.String())
@@ -150,16 +151,6 @@ func processBlock(blockIdx data.Hex, accounts map[string]bool) error {
 		}
 
 		trx.Value = decimal.NewFromBigInt(amount.Int, 0)
-
-		// Outgoing
-		if origin := strings.ToLower(txDto.From); accounts[origin] {
-			trx.Account = origin
-		}
-
-		// Incoming
-		if receiver := strings.ToLower(txDto.To); accounts[receiver] {
-			trx.Account = receiver
-		}
 
 		log.Printf("Transaction details: %+v", trx)
 

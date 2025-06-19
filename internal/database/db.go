@@ -34,35 +34,28 @@ func (db *DBClient) Ping(ctx context.Context) error {
 
 func (db *DBClient) CreateSchema(ctx context.Context) error {
 	_, err := db.Conn.Exec(ctx, `
-	CREATE TABLE IF NOT EXISTS transactions (
-		hash TEXT PRIMARY KEY,
-		type TEXT NOT NULL,
-		value NUMERIC NOT NULL,
-		from_address TEXT NOT NULL,
-		to_address TEXT NOT NULL,
-		block_index TEXT NOT NULL,
-		succesful BOOLEAN NOT NULL,
-		timestamp TIMESTAMP NOT NULL,
-		account_address TEXT NOT NULL
+	CREATE TABLE transactions (
+    	hash TEXT PRIMARY KEY,
+    	type TEXT NOT NULL CHECK (type IN ('transfer', 'call', 'fee')),
+    	value NUMERIC NOT NULL,
+    	from_address TEXT NOT NULL,
+    	to_address TEXT,
+    	block_index TEXT NOT NULL,
+    	succesful BOOLEAN NOT NULL,
+    	timestamp TIMESTAMPTZ NOT NULL
 	);
 
-	CREATE TABLE IF NOT EXISTS fees (
-		transaction_hash TEXT PRIMARY KEY REFERENCES transactions(hash) ON DELETE CASCADE,
-		amount NUMERIC NOT NULL,
-  		from_address TEXT NOT NULL
+	CREATE TABLE fees (
+    	transaction_hash TEXT PRIMARY KEY REFERENCES transactions(hash) ON DELETE CASCADE,
+    	amount NUMERIC NOT NULL,
+    	from_address TEXT NOT NULL
 	);
 
-	CREATE INDEX IF NOT EXISTS idx_transactions_account_timestamp
-  	  ON transactions (account_address, timestamp DESC);
-
-	ALTER TABLE fees
-  	  ADD CONSTRAINT fk_fees_transaction
-  	  FOREIGN KEY (transaction_hash) REFERENCES transactions(hash)
-  	  ON DELETE CASCADE;
-
-	CREATE UNIQUE INDEX IF NOT EXISTS idx_fees_transaction_hash ON fees(transaction_hash);
+	CREATE INDEX IF NOT EXISTS idx_fees_from_address ON fees(from_address);
 	CREATE INDEX IF NOT EXISTS idx_transactions_from ON transactions(from_address);
 	CREATE INDEX IF NOT EXISTS idx_transactions_to ON transactions(to_address);
+	CREATE INDEX IF NOT EXISTS idx_transactions_from_timestamp ON transactions(from_address, timestamp DESC);
+	CREATE INDEX IF NOT EXISTS idx_transactions_to_timestamp ON transactions(to_address, timestamp DESC);
 	`)
 
 	return err
@@ -70,8 +63,8 @@ func (db *DBClient) CreateSchema(ctx context.Context) error {
 
 func (db *DBClient) UpsertTransaction(ctx context.Context, tx Transaction) error {
 	_, err := db.Conn.Exec(ctx, `
-	INSERT INTO transactions (hash, type, value, from_address, to_address, block_index, succesful, timestamp, account_address)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+	INSERT INTO transactions (hash, type, value, from_address, to_address, block_index, succesful, timestamp)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	ON CONFLICT (hash) DO UPDATE SET
 		type = EXCLUDED.type,
 		value = EXCLUDED.value,
@@ -79,9 +72,8 @@ func (db *DBClient) UpsertTransaction(ctx context.Context, tx Transaction) error
 		to_address = EXCLUDED.to_address,
 		block_index = EXCLUDED.block_index,
 		succesful = EXCLUDED.succesful,
-		timestamp = EXCLUDED.timestamp,
-		account_address = EXCLUDED.account_address;
-	`, tx.Hash, tx.Type, tx.Value, tx.From, tx.To, tx.BlockIndex, tx.Succesful, tx.Timestamp, tx.Account)
+		timestamp = EXCLUDED.timestamp;
+	`, tx.Hash, tx.Type, tx.Value, tx.From, tx.To, tx.BlockIndex, tx.Succesful, tx.Timestamp)
 
 	return err
 }

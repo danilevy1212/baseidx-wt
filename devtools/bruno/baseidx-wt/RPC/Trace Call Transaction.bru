@@ -1,0 +1,19 @@
+meta {
+  name: Trace Call Transaction
+  type: http
+  seq: 7
+}
+
+post {
+  url: https://docs-demo.base-mainnet.quiknode.pro/
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {"method":"debug_traceTransaction","params":["0x2d3750f7944818e1a4e6b897b6f6ea4d975fcf46720990eb4eda0c00d926a8fd",{"tracer":"callTracer"}],"id":1,"jsonrpc":"2.0"}
+}
