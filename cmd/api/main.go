@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/danilevy1212/baseidx-wt/internal/config"
 	"github.com/danilevy1212/baseidx-wt/internal/database"
@@ -75,10 +76,43 @@ func main() {
 	})
 
 	r.GET("/transactions", func(c *gin.Context) {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "service unavailable"})
+		startStr := c.Query("start")
+		endStr := c.Query("end")
+
+		if startStr == "" || endStr == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "start and end parameters are required"})
+			return
+		}
+
+		start, err := parseTime(startStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("invalid start: %v", err)})
+			return
+		}
+		end, err := parseTime(endStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("invalid end: %v", err)})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"start": start.Format(time.RFC3339),
+			"end":   end.Format(time.RFC3339),
+		})
 	})
 
 	if err := r.Run(fmt.Sprintf(":%d", cfg.Server.Port)); err != nil {
 		log.Fatalf("Error starting server: %v", err)
 	}
+}
+
+func parseTime(value string) (time.Time, error) {
+	t, err := time.Parse(time.RFC3339, value)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("invalid RFC3339 timestamp (must be YYYY-MM-DDTHH:MM:SSZ): %w", err)
+	}
+	if t.Location() != time.UTC {
+		return time.Time{}, fmt.Errorf("timestamp must be in UTC and end with 'Z'")
+	}
+	return t, nil
 }
