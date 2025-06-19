@@ -48,12 +48,8 @@ func (db *DBClient) CreateSchema(ctx context.Context) error {
 
 	CREATE TABLE IF NOT EXISTS fees (
 		transaction_hash TEXT PRIMARY KEY REFERENCES transactions(hash) ON DELETE CASCADE,
-		amount NUMERIC NOT NULL
-	);
-
-	CREATE TABLE IF NOT EXISTS accounts (
-		address TEXT PRIMARY KEY,
-		balance NUMERIC NOT NULL
+		amount NUMERIC NOT NULL,
+  		from_address TEXT NOT NULL
 	);
 
 	CREATE INDEX IF NOT EXISTS idx_transactions_account_timestamp
@@ -65,7 +61,39 @@ func (db *DBClient) CreateSchema(ctx context.Context) error {
   	  ON DELETE CASCADE;
 
 	CREATE UNIQUE INDEX IF NOT EXISTS idx_fees_transaction_hash ON fees(transaction_hash);
+	CREATE INDEX IF NOT EXISTS idx_transactions_from ON transactions(from_address);
+	CREATE INDEX IF NOT EXISTS idx_transactions_to ON transactions(to_address);
 	`)
+
+	return err
+}
+
+func (db *DBClient) UpsertTransaction(ctx context.Context, tx Transaction) error {
+	_, err := db.Conn.Exec(ctx, `
+	INSERT INTO transactions (hash, type, value, from_address, to_address, block_index, succesful, timestamp, account_address)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+	ON CONFLICT (hash) DO UPDATE SET
+		type = EXCLUDED.type,
+		value = EXCLUDED.value,
+		from_address = EXCLUDED.from_address,
+		to_address = EXCLUDED.to_address,
+		block_index = EXCLUDED.block_index,
+		succesful = EXCLUDED.succesful,
+		timestamp = EXCLUDED.timestamp,
+		account_address = EXCLUDED.account_address;
+	`, tx.Hash, tx.Type, tx.Value, tx.From, tx.To, tx.BlockIndex, tx.Succesful, tx.Timestamp, tx.Account)
+
+	return err
+}
+
+func (db *DBClient) UpsertFee(ctx context.Context, fee Fee) error {
+	_, err := db.Conn.Exec(ctx, `
+	INSERT INTO fees (transaction_hash, amount, from_address)
+	VALUES ($1, $2, $3)
+	ON CONFLICT (transaction_hash) DO UPDATE SET
+		amount = EXCLUDED.amount,
+		from_address = EXCLUDED.from_address;
+	`, fee.TransactionHash, fee.Amount, fee.FromAddress)
 
 	return err
 }

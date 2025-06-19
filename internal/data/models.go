@@ -20,6 +20,10 @@ func NewHexFromString(hex string) (*Hex, error) {
 	return &Hex{bi}, nil
 }
 
+func NewHexFromUint64(hex uint64) *Hex {
+	return &Hex{new(big.Int).SetUint64(hex) }
+}
+
 func (h Hex) String() string {
 	if h.Int == nil {
 		return "0x0"

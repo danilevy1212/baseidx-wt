@@ -9,10 +9,11 @@ import (
 
 type Config struct {
 	// Addresses I will index
-	Addresses  []string `env:"ADDRESSES,required"`
-	StartBlock uint64   `env:"START_BLOCK,required"`
-	Database   DBConfig
-	BaseAPI    BaseAPIConfig
+	Addresses []string `env:"ADDRESSES,required"`
+	// Block to prefetch, then use the latest one as the startIdx
+	Blocks    []uint64 `env:"BLOCKS,required"`
+	Database  DBConfig
+	BaseAPI   BaseAPIConfig
 }
 
 type DBConfig struct {

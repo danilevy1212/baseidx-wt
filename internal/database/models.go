@@ -21,9 +21,5 @@ type Transaction struct {
 type Fee struct {
 	TransactionHash string          `db:"transaction_hash" json:"transactionHash"`
 	Amount          decimal.Decimal `db:"amount" json:"amount"`
-}
-
-type Account struct {
-	Address string          `db:"address" json:"address"`
-	Balance decimal.Decimal `db:"balance" json:"balance"`
+	FromAddress     string          `db:"from_address" json:"fromAddress"` // The address that paid the fee
 }
