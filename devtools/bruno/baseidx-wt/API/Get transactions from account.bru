@@ -1,0 +1,15 @@
+meta {
+  name: Get transactions from account
+  type: http
+  seq: 3
+}
+
+get {
+  url: http://localhost:3000/accounts/:account/transactions
+  body: none
+  auth: inherit
+}
+
+params:path {
+  account: 0x0933d2a6b30e936057e0d6218d10ca033165cbcd
+}

@@ -2,8 +2,10 @@ package database
 
 import (
 	"context"
+	"log"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/shopspring/decimal"
 
 	"github.com/danilevy1212/baseidx-wt/internal/config"
 )
@@ -88,4 +90,35 @@ func (db *DBClient) UpsertFee(ctx context.Context, fee Fee) error {
 	`, fee.TransactionHash, fee.Amount, fee.FromAddress)
 
 	return err
+}
+
+func (db *DBClient) GetBalance(ctx context.Context, address string) (decimal.Decimal, error) {
+	var balance decimal.Decimal
+
+	log.Printf("Getting balance for address %s", address)
+
+	err := db.Conn.QueryRow(ctx, `
+		SELECT
+  	  	  -- Include value only from successful transactions
+  	  	  COALESCE(SUM(CASE
+    		WHEN succesful = TRUE AND from_address = $1 THEN -value
+    		WHEN succesful = TRUE AND to_address   = $1 THEN  value
+    		ELSE 0
+  	  	  END), 0) 
+  	  	  -- Always subtract fees if the address paid them, even if tx failed
+  	  	  - COALESCE((
+    		SELECT SUM(amount)
+    		FROM fees
+    		WHERE from_address = $1
+  	  	  ), 0) AS balance
+		FROM transactions
+		WHERE from_address = $1 OR to_address = $1;
+	`, address).Scan(&balance)
+
+	if err != nil {
+		log.Printf("Error getting balance for address %s: %v", address, err)
+		return decimal.Zero, err
+	}
+
+	return balance, nil
 }

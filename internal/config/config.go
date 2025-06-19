@@ -11,9 +11,10 @@ type Config struct {
 	// Addresses I will index
 	Addresses []string `env:"ADDRESSES,required"`
 	// Block to prefetch, then use the latest one as the startIdx
-	Blocks    []uint64 `env:"BLOCKS,required"`
-	Database  DBConfig
-	BaseAPI   BaseAPIConfig
+	Blocks   []uint64 `env:"BLOCKS,required"`
+	Database DBConfig
+	BaseAPI  BaseAPIConfig
+	Server   ServerConfig
 }
 
 type DBConfig struct {
@@ -22,6 +23,10 @@ type DBConfig struct {
 	Name     string `env:"DB_NAME,required"`
 	Host     string `env:"DB_HOST,default=localhost"`
 	Port     uint16 `env:"DB_PORT,default=5432"`
+}
+
+type ServerConfig struct {
+	Port uint16 `env:"API_PORT,default=3000"`
 }
 
 func (dbc DBConfig) String() string {

@@ -1,0 +1,15 @@
+meta {
+  name: Get Balance
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:3000/accounts/:account/balance
+  body: none
+  auth: inherit
+}
+
+params:path {
+  account: 0xc2f8f39f137359aee27829589c31c8cccd1bd6bb
+}
