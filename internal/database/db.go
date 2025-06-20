@@ -9,6 +9,7 @@ import (
 	"github.com/shopspring/decimal"
 
 	"github.com/danilevy1212/baseidx-wt/internal/config"
+	"github.com/danilevy1212/baseidx-wt/internal/data"
 )
 
 type DBClient struct {
@@ -146,6 +147,10 @@ func (db *DBClient) GetTransactionsFromAddress(ctx context.Context, address stri
 		); err != nil {
 			return nil, err
 		}
+
+		block, _ := data.NewHexFromString(tx.BlockIndex)
+		tx.BlockIndex = block.Int.String()
+
 		txs = append(txs, tx)
 	}
 
@@ -177,6 +182,10 @@ func (db *DBClient) GetTransactionsInRange(ctx context.Context, start, end time.
 		); err != nil {
 			return nil, err
 		}
+
+		block, _ := data.NewHexFromString(tx.BlockIndex)
+		tx.BlockIndex = block.Int.String()
+
 		txs = append(txs, tx)
 	}
 

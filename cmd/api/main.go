@@ -35,7 +35,7 @@ func main() {
 	})
 
 	r.GET("/accounts/:account/balance", func(c *gin.Context) {
-		account := c.Param("account")
+		account := strings.ToLower(c.Param("account"))
 		if account == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "account parameter is required"})
 			return
