@@ -11,14 +11,16 @@ import (
 )
 
 type Client struct {
-	BaseURL string
-	client  *http.Client
+	BaseURL      string
+	DebugBaseURL string
+	client       *http.Client
 }
 
-func NewClient(baseURL string) Client {
+func NewClient(baseURL, debugBaseURL string) Client {
 	return Client{
-		BaseURL: baseURL,
-		client:  &http.Client{},
+		BaseURL:      baseURL,
+		DebugBaseURL: debugBaseURL,
+		client:       &http.Client{},
 	}
 }
 
@@ -89,4 +91,41 @@ func (c *Client) GetLastestBlock() (*LatestBlockDTO, error) {
 		return nil, err
 	}
 	return &res, nil
+}
+
+func (c *Client) GetTransactionCallTrace(transactionHash string) (*GetTransactionCallTraceDTO, error) {
+	payload := map[string]any{
+		"jsonrpc": "2.0",
+		"id":      1,
+		"method":  "debug_traceTransaction",
+		"params": []any{
+			transactionHash,
+			map[string]any{
+				"tracer":       "callTracer",
+				"tracerConfig": map[string]any{"onlyTopLevel": false},
+			},
+		},
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := http.Post(
+		c.DebugBaseURL,
+		"application/json",
+		bytes.NewReader(jsonData),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var traceDTO GetTransactionCallTraceDTO
+	if err := json.NewDecoder(resp.Body).Decode(&traceDTO); err != nil {
+		return nil, err
+	}
+
+	return &traceDTO, nil
 }

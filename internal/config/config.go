@@ -34,7 +34,8 @@ func (dbc DBConfig) String() string {
 }
 
 type BaseAPIConfig struct {
-	BaseURL string `env:"BASE_API_BASE_URL,default=https://base-rpc.publicnode.com"`
+	BaseURL      string `env:"BASE_API_BASE_URL,default=https://base-rpc.publicnode.com"`
+	BaseDebugURL string `env:"BASE_API_BASE_DEBUG_URL,default=https://docs-demo.base-mainnet.quiknode.pro"`
 }
 
 func New(ctx context.Context) (*Config, error) {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"slices"
 	"strings"
@@ -38,7 +39,7 @@ func main() {
 
 	log.Println("Database connection successful")
 
-	rpcClient = rpc.NewClient(cfg.BaseAPI.BaseURL)
+	rpcClient = rpc.NewClient(cfg.BaseAPI.BaseURL, cfg.BaseAPI.BaseDebugURL)
 
 	lastBlock, err := rpcClient.GetLastestBlock()
 	if err != nil {
@@ -148,7 +149,6 @@ func processBlock(blockIdx data.Hex, accounts map[string]bool) ([]database.Trans
 		trx.Type = "transfer"
 		if txDto.Input != "0x" {
 			trx.Type = "call"
-			// TODO  Special handling here, if we have the time later
 		}
 
 		if receiptDTO.Status == "0x1" {
@@ -166,6 +166,15 @@ func processBlock(blockIdx data.Hex, accounts map[string]bool) ([]database.Trans
 		log.Printf("Transaction details: %+v", trx)
 
 		transactions = append(transactions, trx)
+
+		// Recursively add calls
+		if trx.Type == "call" {
+			err := processContractCall(trx, accounts, &transactions)
+			if err != nil {
+				log.Printf("Error processing contract call for transaction %s: %v", trx.Hash, err)
+				continue
+			}
+		}
 
 		// Fee
 		var fee database.Transaction
@@ -208,6 +217,83 @@ func processBlock(blockIdx data.Hex, accounts map[string]bool) ([]database.Trans
 	}
 
 	return transactions, nil
+}
+
+func processContractCall(origin database.Transaction, accounts map[string]bool, transactions *[]database.Transaction) error {
+	calls, err := rpcClient.GetTransactionCallTrace(origin.Hash)
+
+	if err != nil {
+		log.Printf("Error getting call trace for transaction %s: %v", origin.Hash, err)
+		return err
+	}
+
+	return recurseCallStack(origin, calls.Result.Calls, accounts, transactions, new(int))
+}
+
+func recurseCallStack(origin database.Transaction, callStack []rpc.CallTrace, accounts map[string]bool, transactions *[]database.Transaction, count *int) error {
+	for _, call := range callStack {
+		// Skip if no value was transferred
+		if call.Value == "0x0" || call.Value == "0x" || call.Value == "" {
+			// Still recurse to deeper calls even if this call itself had no value
+			if len(call.Calls) > 0 {
+				err := recurseCallStack(origin, call.Calls, accounts, transactions, count)
+				if err != nil {
+					return err
+				}
+			}
+			continue
+		}
+
+		// Parse value
+		valHex, err := data.NewHexFromString(call.Value)
+		if err != nil {
+			log.Printf("Error parsing internal call value %s: %v", call.Value, err)
+			continue
+		}
+
+		// Only include if from or to is in accounts map
+		if !accounts[call.From] && !accounts[call.To] {
+			// Still recurse
+			if len(call.Calls) > 0 {
+				err := recurseCallStack(origin, call.Calls, accounts, transactions, count)
+				if err != nil {
+					return err
+				}
+			}
+			continue
+		}
+
+		// Increment the count for unique internal calls
+		*count++
+
+		trx := database.Transaction{
+			From:       call.From,
+			To:         call.To,
+			Hash:       origin.Hash + "_internal_" + fmt.Sprintf("%d", *count),
+			Value:      decimal.NewFromBigInt(valHex.Int, 0),
+			BlockIndex: origin.BlockIndex,
+			Timestamp:  origin.Timestamp,
+			Succesful:  true,
+		}
+
+		trx.Type = "transfer"
+		if call.Input != "0x" {
+			trx.Type = "call"
+		}
+
+		log.Printf("Processing internal call %d: %+v", *count, trx)
+
+		*transactions = append(*transactions, trx)
+
+		// Recurse
+		if len(call.Calls) > 0 {
+			err := recurseCallStack(origin, call.Calls, accounts, transactions, count)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // TODO  Same, aka, move to utils or something

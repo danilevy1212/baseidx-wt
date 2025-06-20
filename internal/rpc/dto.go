@@ -39,3 +39,13 @@ type Transaction struct {
 
 // eth_getBalance
 type BalanceDTO = Result[string]
+
+type CallTrace struct {
+	From  string      `json:"from"`
+	To    string      `json:"to"`
+	Value string      `json:"value"` // hex
+	Input string      `json:"input"` // hex
+	Calls []CallTrace `json:"calls,omitempty"`
+}
+
+type GetTransactionCallTraceDTO = Result[CallTrace]
